@@ -3,237 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <title>Frontenac Fire Watch</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
     <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-        
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: #0f172a;
-            overflow: hidden;
-        }
-        
+        body { font-family: 'Inter', sans-serif; background: #0f172a; overflow: hidden; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; }
         
+        /* UI Overlay */
         #ui-overlay {
-            position: absolute; 
-            top: 24px; 
-            left: 24px; 
-            z-index: 10;
-            background: rgba(15, 23, 42, 0.7); 
-            backdrop-filter: blur(16px);
-            color: #fff; 
-            padding: 24px; 
-            border-radius: 16px; 
+            position: absolute; top: 24px; left: 24px; z-index: 10;
+            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px);
+            color: #fff; padding: 24px; border-radius: 16px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            min-width: 300px;
-            max-width: 380px;
+            min-width: 300px; max-width: 380px; max-height: 80vh; overflow-y: auto;
         }
-        
         .header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 12px; margin-bottom: 16px; padding-bottom: 12px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
+        .header-title { display: flex; align-items: center; gap: 12px; }
         .fire-icon {
-            width: 28px;
-            height: 28px;
-            background: linear-gradient(135deg, #ef4444, #f97316);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
+            width: 28px; height: 28px; background: linear-gradient(135deg, #ef4444, #f97316);
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            font-size: 16px; flex-shrink: 0;
         }
-        
         h1 { font-size: 18px; font-weight: 700; color: #fff; }
         .subtitle { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+        .reset-btn {
+            background: none; border: none; color: #94a3b8; cursor: pointer;
+            font-size: 18px; padding: 4px; border-radius: 4px; transition: color 0.2s;
+        }
+        .reset-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
         
         .status-card {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 10px;
-            padding: 14px;
-            margin: 8px 0;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
+            background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px; padding: 14px; margin: 8px 0;
+            transition: all 0.2s ease; cursor: pointer;
         }
-        
-        .status-card:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.15);
-            transform: translateX(3px);
+        .status-card:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.15); }
+        .status-card.active {
+            background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.5);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
         }
-        
-        /* Pulse animation for changes */
-        .status-card.changed {
-            animation: status-pulse 0.6s ease-out;
-            border-color: rgba(59, 130, 246, 0.5);
-        }
-        
-        @keyframes status-pulse {
-            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.6); }
-            70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
-        }
-        
-        .status-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
-        }
-        
-        .township-name {
-            font-size: 14px;
-            font-weight: 600;
-            color: #e2e8f0;
-        }
-        
+        .status-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .township-name { font-size: 14px; font-weight: 600; color: #e2e8f0; }
         .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 10px;
-            border-radius: 16px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            transition: all 0.3s ease;
+            display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px;
+            border-radius: 16px; font-size: 11px; font-weight: 600; text-transform: uppercase;
         }
-        
-        .status-badge.on {
-            background: rgba(239, 68, 68, 0.15);
-            color: #ef4444;
-            border: 1px solid rgba(239, 68, 68, 0.25);
-        }
-        
-        .status-badge.off {
-            background: rgba(16, 185, 129, 0.15);
-            color: #10b981;
-            border: 1px solid rgba(16, 185, 129, 0.25);
-        }
-        
-        .status-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: currentColor;
-        }
-        
+        .status-badge.on { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.25); }
+        .status-badge.off { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.25); }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
         .status-info {
-            font-size: 12px;
-            color: #94a3b8;
+            font-size: 12px; color: #94a3b8; display: flex; justify-content: space-between;
+            align-items: center; margin-top: 8px;
         }
-        
         .status-info a {
-            color: #64748b;
-            text-decoration: none;
+            color: #60a5fa; text-decoration: none; font-weight: 500;
+            display: flex; align-items: center; gap: 4px;
         }
-        
-        .status-info a:hover { color: #94a3b8; }
-        
-        #last-updated { 
-            font-size: 11px; 
-            color: #475569; 
-            margin-top: 14px; 
-            padding-top: 10px; 
+        .status-info a:hover { text-decoration: underline; }
+        #last-updated {
+            font-size: 11px; color: #475569; margin-top: 14px; padding-top: 10px;
             border-top: 1px solid rgba(255, 255, 255, 0.06);
         }
         
         /* Legend */
         .legend {
-            position: absolute;
-            top: 24px;
-            right: 24px;
-            background: rgba(15, 23, 42, 0.7);
-            backdrop-filter: blur(12px);
-            padding: 12px 16px;
-            border-radius: 10px;
+            position: absolute; top: 24px; right: 24px;
+            background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px);
+            padding: 12px 16px; border-radius: 10px;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 10;
-            font-size: 12px;
-            color: #cbd5e1;
+            z-index: 10; font-size: 12px; color: #cbd5e1;
         }
-        
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin: 6px 0;
-        }
-        
-        .legend-color {
-            width: 16px;
-            height: 16px;
-            border-radius: 3px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
+        .legend-item { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+        .legend-color { width: 16px; height: 16px; border-radius: 3px; border: 1px solid rgba(255, 255, 255, 0.2); }
         .legend-color.ban { background: #ef4444; }
         .legend-color.safe { background: #10b981; }
         
-        /* Debug Overlay */
-        #debug-overlay {
-            position: absolute;
-            bottom: 24px;
-            left: 24px;
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(8px);
-            padding: 10px 14px;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 10;
-            font-family: 'SF Mono', 'Fira Code', monospace;
-            font-size: 11px;
-            color: #94a3b8;
-            min-width: 200px;
-        }
-        
-        .debug-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 12px;
-            margin: 2px 0;
-        }
-        
-        .debug-label { color: #64748b; }
-        .debug-value { color: #e2e8f0; font-weight: 500; }
-        
-        /* Popup styling */
-        .maplibregl-popup-content { 
-            background: rgba(15, 23, 42, 0.95); 
-            color: #fff; 
-            border-radius: 10px; 
-            padding: 12px 16px; 
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 13px;
+        /* Popup */
+        .maplibregl-popup-content {
+            background: rgba(15, 23, 42, 0.95); color: #fff; border-radius: 10px;
+            padding: 12px 16px; border: 1px solid rgba(255, 255, 255, 0.1); font-size: 13px;
         }
         .maplibregl-popup-tip { border-top-color: rgba(15, 23, 42, 0.95); }
         .popup-title { font-weight: 600; margin-bottom: 4px; color: #e2e8f0; }
-        .popup-status { color: #94a3b8; }
         .popup-status.on { color: #ef4444; }
         .popup-status.off { color: #10b981; }
         
-        /* Map controls spacing */
-        .maplibregl-ctrl-bottom-right {
-            margin-bottom: 12px;
-            margin-right: 12px;
-        }
-        .maplibregl-ctrl-bottom-left {
-            margin-bottom: 12px;
-            margin-left: 220px;
+        /* Controls */
+        .maplibregl-ctrl-bottom-right { margin-bottom: 12px; margin-right: 12px; }
+        
+        /* Mobile */
+        @media (max-width: 768px) {
+            #ui-overlay {
+                top: auto; bottom: 0; left: 0; right: 0; width: 100%; max-width: 100%;
+                border-radius: 20px 20px 0 0; padding: 20px; max-height: 40vh;
+                box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+            }
+            .legend { top: 12px; right: 12px; padding: 8px 12px; font-size: 11px; }
+            .maplibregl-ctrl-bottom-right { margin-bottom: 45vh; margin-right: 12px; }
+            h1 { font-size: 16px; }
         }
     </style>
 </head>
@@ -241,47 +116,27 @@
 
 <div id="ui-overlay">
     <div class="header">
-        <div class="fire-icon">🔥</div>
-        <div>
-            <h1>Frontenac Fire Watch</h1>
-            <div class="subtitle">Burn Ban Status</div>
+        <div class="header-title">
+            <div class="fire-icon">🔥</div>
+            <div>
+                <h1>Frontenac Fire Watch</h1>
+                <div class="subtitle">Burn Ban Status</div>
+            </div>
         </div>
+        <button id="reset-view" class="reset-btn" style="display:none;" title="Clear Selection">✕</button>
     </div>
     <div id="status-list">Loading...</div>
     <div id="last-updated"></div>
 </div>
 
 <div class="legend">
-    <div class="legend-item">
-        <div class="legend-color ban"></div>
-        <span>Ban Active</span>
-    </div>
-    <div class="legend-item">
-        <div class="legend-color safe"></div>
-        <span>No Ban</span>
-    </div>
+    <div class="legend-item"><div class="legend-color ban"></div><span>Ban Active</span></div>
+    <div class="legend-item"><div class="legend-color safe"></div><span>No Ban</span></div>
 </div>
-
-<!-- Debug Overlay -->
-<!-- <div id="debug-overlay">
-    <div class="debug-row">
-        <span class="debug-label">Center:</span>
-        <span class="debug-value" id="debug-center">--</span>
-    </div>
-    <div class="debug-row">
-        <span class="debug-label">Zoom:</span>
-        <span class="debug-value" id="debug-zoom">--</span>
-    </div>
-    <div class="debug-row" style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.05)">
-        <span class="debug-label">Copy:</span>
-        <span class="debug-value" style="cursor:pointer" id="debug-copy" title="Click to copy">[center, zoom]</span>
-    </div>
-</div> -->
 
 <div id="map"></div>
 
 <script>
-    // 1. Initialize Map with your preferred coordinates
     const map = new maplibregl.Map({
         container: 'map',
         style: {
@@ -289,84 +144,70 @@
             sources: {
                 'carto-dark': {
                     type: 'raster',
-                    tiles: [
-                        'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-                        'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'
-                    ],
+                    tiles: ['https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'],
                     tileSize: 256,
                     attribution: '© CartoDB © OpenStreetMap'
                 }
             },
-            layers: [{
-                id: 'carto-dark',
-                type: 'raster',
-                source: 'carto-dark',
-                paint: { 'raster-opacity': 0.85 }
-            }]
+            layers: [{ id: 'carto-dark', type: 'raster', source: 'carto-dark', paint: { 'raster-opacity': 0.85 } }]
         },
-        // Updated coordinates and zoom
         center: [-76.8107, 44.7806],
         zoom: 9,
         pitch: 0,
-        bearing: 0,
-        antialias: true
+        bearing: 0
     });
 
-    // Global vars for popups and state
     let currentPopup = null;
-    let previousStatus = {};
+    let selectedTownshipKey = null;
+    let allStatusData = {};
 
     map.on('load', async () => {
-        // 2. Fetch Township Boundaries
+        // 1. Fetch Township Boundaries (WORKING VERSION)
         let townshipGeoJSON;
-        const arcgisUrl = 'https://services2.arcgis.com/vJlmDE1PmdTcJF0N/arcgis/rest/services/Township_Boundaries/FeatureServer/0/query?where=1%3D1&outFields=*&f=geojson';
+        const arcgisUrl = 'https://services2.arcgis.com/vJlmDE1PmdTcJF0N/arcgis/rest/services/Township_Boundaries/FeatureServer/0/query?where=1%3D1&outFields=*&outSR=4326&f=geojson';
         
         try {
             const response = await fetch(arcgisUrl);
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             townshipGeoJSON = await response.json();
-            
-            console.log(`✅ Loaded GeoJSON: ${townshipGeoJSON.features.length} townships found.`);
+            console.log(`✅ Loaded ${townshipGeoJSON.features.length} townships.`);
         } catch (error) {
-            console.error('❌ Failed to load GeoJSON. Check console for CORS or network errors.');
-            console.error(error);
+            console.error('❌ Failed to load GeoJSON:', error);
             document.getElementById('status-list').innerHTML = '<div style="color:#ef4444">Map data failed to load.</div>';
             return;
         }
 
-        // 3. Fetch Fire Status
-        let statusData = { municipalities: {} };
+        // 2. Fetch Fire Status
         try {
             const response = await fetch('fire_status.json');
-            if (response.ok) statusData = await response.json();
-        } catch (e) {
-            console.warn("⚠️ No local fire_status.json found");
-        }
+            if (response.ok) allStatusData = await response.json();
+        } catch (e) { console.warn("No fire_status.json found"); }
 
-        // 4. Merge Status with GeoJSON
+        // 3. Merge Status with GeoJSON
         townshipGeoJSON.features.forEach(feature => {
-            // Handle various property names
             const name = feature.properties.name 
                       || feature.properties.TOWNSHIP_NAME 
                       || feature.properties.Township 
                       || feature.properties.MUNICIPALITY 
                       || 'Unknown';
             
-            // Normalize key: "North Frontenac" -> "north_frontenac"
             const key = name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+            const status = allStatusData.municipalities[key]?.ban;
+            const source = allStatusData.municipalities[key]?.source_url;
             
-            const status = statusData.municipalities[key]?.ban;
             feature.properties.status = status || 'UNKNOWN';
             feature.properties.displayName = name;
+            feature.properties.matchKey = key;
+            feature.properties.sourceUrl = source;
         });
 
-        // 5. Add Source (Fixed syntax)
+        // 4. Add Source - EXPLICIT 'data' KEY (THE FIX)
         map.addSource('townships', {
             type: 'geojson',
-            data: townshipGeoJSON  // <-- This was missing before
+            data: townshipGeoJSON
         });
 
-        // 6. Add Layer
+        // 5. Add Base Fill Layer
         map.addLayer({
             id: 'township-fill',
             type: 'fill',
@@ -374,59 +215,105 @@
             paint: {
                 'fill-color': [
                     'match', ['get', 'status'],
-                    'ON', '#ef4444',      // Red
-                    'OFF', '#10b981',     // Green
-                    '#475569'             // Grey (Unknown)
+                    'ON', '#ef4444',
+                    'OFF', '#10b981',
+                    '#475569'
                 ],
                 'fill-opacity': 0.75,
                 'fill-outline-color': 'rgba(255, 255, 255, 0.3)'
             }
         });
 
-        // 7. Hover Interaction (Fixed Trailing Popups)
-        map.on('mousemove', 'township-fill', (e) => {
-            map.getCanvas().style.cursor = 'pointer';
-            
+        // 6. Add Highlight Layer (white border for selected)
+        map.addLayer({
+            id: 'township-highlight',
+            type: 'line',
+            source: 'townships',
+            paint: {
+                'line-color': '#ffffff',
+                'line-width': 4,
+                'line-blur': 1
+            },
+            filter: ['==', ['get', 'matchKey'], ''] // Start empty
+        });
+
+        // 7. Interactions
+        map.on('click', 'township-fill', (e) => {
             if (e.features && e.features.length > 0) {
                 const props = e.features[0].properties;
-                const status = props.status;
-                const statusText = status === 'ON' ? '🔴 Ban Active' 
-                                 : status === 'OFF' ? '🟢 No Ban' 
-                                 : '⚪ Unknown';
-                const statusClass = status === 'ON' ? 'on' : status === 'OFF' ? 'off' : '';
-                
-                // Reuse single popup instance
-                if (!currentPopup) {
-                    currentPopup = new maplibregl.Popup({ 
-                        offset: 10, 
-                        closeButton: false, 
-                        anchor: 'bottom',
-                        className: 'fire-popup'
-                    });
-                }
-                
-                currentPopup
-                    .setLngLat(e.lngLat)
-                    .setHTML(`
-                        <div class="popup-title">${props.displayName}</div>
-                        <div class="popup-status ${statusClass}">${statusText}</div>
-                    `)
-                    .addTo(map);
+                selectTownship(props.matchKey);
+            }
+        });
+
+        map.on('mousemove', 'township-fill', (e) => {
+            map.getCanvas().style.cursor = 'pointer';
+            if (e.features && e.features.length > 0 && !selectedTownshipKey) {
+                showPopup(e.lngLat, e.features[0].properties);
             }
         });
 
         map.on('mouseleave', 'township-fill', () => {
             map.getCanvas().style.cursor = '';
-            if (currentPopup) {
+            if (currentPopup && window.innerWidth > 768 && !selectedTownshipKey) {
                 currentPopup.remove();
                 currentPopup = null;
             }
         });
 
-        // 8. Setup UI
-        updateSidebar(statusData);
-        setupDebugOverlay();
+        updateSidebar(allStatusData);
+        
+        // Reset button
+        document.getElementById('reset-view').addEventListener('click', () => {
+            selectedTownshipKey = null;
+            updateHighlight();
+            document.getElementById('reset-view').style.display = 'none';
+            document.querySelectorAll('.status-card').forEach(c => c.classList.remove('active'));
+            if (currentPopup) { currentPopup.remove(); currentPopup = null; }
+        });
     });
+
+    function selectTownship(key) {
+        selectedTownshipKey = key;
+        updateHighlight();
+        document.getElementById('reset-view').style.display = 'block';
+        
+        // Update sidebar cards
+        document.querySelectorAll('.status-card').forEach(card => {
+            card.classList.remove('active');
+            if (card.dataset.key === key) {
+                card.classList.add('active');
+                card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        });
+        
+        // Remove popup when selecting
+        if (currentPopup) { currentPopup.remove(); currentPopup = null; }
+    }
+
+    function updateHighlight() {
+        if (map.getLayer('township-highlight')) {
+            map.setFilter('township-highlight', 
+                selectedTownshipKey 
+                    ? ['==', ['get', 'matchKey'], selectedTownshipKey] 
+                    : ['==', ['get', 'matchKey'], '']
+            );
+        }
+    }
+
+    function showPopup(lngLat, props) {
+        const status = props.status;
+        const statusText = status === 'ON' ? '🔴 Ban Active' : status === 'OFF' ? '🟢 No Ban' : '⚪ Unknown';
+        const statusClass = status === 'ON' ? 'on' : status === 'OFF' ? 'off' : '';
+        
+        if (!currentPopup) {
+            currentPopup = new maplibregl.Popup({ offset: 10, closeButton: false, anchor: 'bottom' });
+        }
+        
+        currentPopup
+            .setLngLat(lngLat)
+            .setHTML(`<div class="popup-title">${props.displayName}</div><div class="popup-status ${statusClass}">${statusText}</div>`)
+            .addTo(map);
+    }
 
     function updateSidebar(data) {
         const container = document.getElementById('status-list');
@@ -445,62 +332,24 @@
             const statusText = status === 'ON' ? 'BAN ACTIVE' : status === 'OFF' ? 'NO BAN' : 'UNKNOWN';
             const sourceUrl = val.source_url;
             
-            // Animation check
-            const changed = previousStatus[key] && previousStatus[key] !== status;
-            const changeClass = changed ? 'changed' : '';
-            
             html += `
-                <div class="status-card ${changeClass}">
+                <div class="status-card" data-key="${key}" onclick="selectTownship('${key}')">
                     <div class="status-header">
                         <span class="township-name">${name}</span>
                         <span class="status-badge ${statusClass}">
-                            <span class="status-dot"></span>
-                            ${statusText}
+                            <span class="status-dot"></span>${statusText}
                         </span>
                     </div>
                     <div class="status-info">
-                        ${sourceUrl ? `<a href="${sourceUrl}" target="_blank">Source →</a>` : ''}
+                        ${sourceUrl ? `<a href="${sourceUrl}" target="_blank" onclick="event.stopPropagation()">View Source ↗</a>` : ''}
                     </div>
                 </div>
             `;
-            
-            previousStatus[key] = status; // Update history
         }
         container.innerHTML = html || '<div style="color:#94a3b8;font-size:13px">No status data available</div>';
     }
 
-    function setupDebugOverlay() {
-        const centerEl = document.getElementById('debug-center');
-        const zoomEl = document.getElementById('debug-zoom');
-        const copyEl = document.getElementById('debug-copy');
-        
-        function updateDebug() {
-            const center = map.getCenter();
-            const zoom = map.getZoom();
-            centerEl.textContent = `${center.lng.toFixed(4)}, ${center.lat.toFixed(4)}`;
-            zoomEl.textContent = zoom.toFixed(2);
-        }
-        
-        map.on('moveend', updateDebug);
-        map.on('zoomend', updateDebug);
-        updateDebug(); // Initial call
-        
-        // Copy logic
-        copyEl.addEventListener('click', () => {
-            const center = map.getCenter();
-            const zoom = map.getZoom();
-            const text = `center: [-76.8107, 44.7806], zoom: ${zoom.toFixed(2)}`;
-            navigator.clipboard.writeText(text).then(() => {
-                copyEl.textContent = '✓ Copied!';
-                setTimeout(() => copyEl.textContent = '[center, zoom]', 1500);
-            });
-        });
-    }
-
-    // Controls
-    map.addControl(new maplibregl.NavigationControl({ showCompass: true, showZoom: true }), 'bottom-right');
-    map.addControl(new maplibregl.FullscreenControl(), 'bottom-right');
-    map.addControl(new maplibregl.ScaleControl({ maxWidth: 100, unit: 'metric' }), 'bottom-left');
+    map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
 </script>
 </body>
 </html>
