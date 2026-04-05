@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """
-Frontenac Fire Status Poller - Fixed & Stable
-Run: python poll_fire_status.py
+Frontenac Fire Status Poller - With Manual Override for Frontenac Islands
+Run: python fire_status.py
 """
 
 import requests
 import json
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone
+
+# --- MANUAL OVERRIDE SETTINGS ---
+# Toggle the ban status for Frontenac Islands here (since no automated source yet)
+FRONTENAC_ISLANDS_STATUS = "OFF"  # Change to "ON" or "OFF" as needed
+FRONTENAC_ISLANDS_URL = "https://www.frontenacislands.ca/en/living-here/fire-and-emergency-services.aspx"
 
 MUNICIPALITIES = {
     "north_frontenac": {
@@ -21,11 +26,15 @@ MUNICIPALITIES = {
     "south_frontenac": {
         "url": "https://www.southfrontenac.net/living-in-south-frontenac/fire-and-emergency-services/fire-ban-status/",
         "type": "text"
+    },
+    "frontenac_islands": {
+        "url": FRONTENAC_ISLANDS_URL,
+        "type": "manual"  # Special type for manual override
     }
 }
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) FireStatusMonitor/0.5"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) FireStatusMonitor/0.6"
 }
 
 def fetch_html(url):
@@ -89,6 +98,11 @@ def extract_south_frontenac(html):
 
 def poll_municipality(key, config):
     print(f"\n[{key}] Fetching {config['url']}...")
+    
+    # Handle manual override municipalities
+    if config.get("type") == "manual":
+        print(f"  → Using manual override: ban={FRONTENAC_ISLANDS_STATUS}")
+        return {"ban": FRONTENAC_ISLANDS_STATUS}
     
     html = fetch_html(config['url'])
     if not html:
