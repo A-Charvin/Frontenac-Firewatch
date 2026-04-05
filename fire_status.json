@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-04-05T14:10:32.596964+00:00",
+  "fetched_at": "2026-04-05T15:25:10.019135+00:00",
   "municipalities": {
     "north_frontenac": {
       "ban": "OFF",
@@ -12,6 +12,10 @@
     "south_frontenac": {
       "ban": "OFF",
       "source_url": "https://www.southfrontenac.net/living-in-south-frontenac/fire-and-emergency-services/fire-ban-status/"
+    },
+    "frontenac_islands": {
+      "ban": "OFF",
+      "source_url": "https://www.frontenacislands.ca/en/living-here/fire-and-emergency-services.aspx"
     }
   }
 }
