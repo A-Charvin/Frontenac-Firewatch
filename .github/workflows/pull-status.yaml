@@ -1,4 +1,4 @@
-name: Poll Fire Status
+name: Pull Fire Status
 
 on:
   schedule:
@@ -37,11 +37,12 @@ jobs:
             echo "changed=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Commit and push
+      - name: Commit and push to data branch
         if: steps.check.outputs.changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add fire_status.json
           git commit -m "chore: update fire status $(date -u '+%Y-%m-%d %H:%M UTC')"
-          git push
+          git push origin HEAD:data
           echo "Status updated and pushed."
