@@ -179,7 +179,7 @@
 
         // 2. Fetch Fire Status
         try {
-            const response = await fetch('https://raw.githubusercontent.com/A-Charvin/Frontenac-Firewatch/refs/heads/data/fire_status.json');
+            const response = await fetch('fire_status.json');
             if (response.ok) allStatusData = await response.json();
         } catch (e) { console.warn("No fire_status.json found"); }
 
