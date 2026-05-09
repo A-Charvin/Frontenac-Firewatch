@@ -82,19 +82,25 @@ def extract_central_frontenac(html):
 
 def extract_south_frontenac(html):
     soup = BeautifulSoup(html, 'html.parser')
-    heading = soup.find('h3')
     
-    if not heading:
-        return {"ban": "SELECTOR_NOT_FOUND"}
-    
-    text = heading.get_text().strip().lower()
-    
-    if 'not a fire ban' in text or 'ban was lifted' in text or 'no ban' in text:
+    # 1. Target the specific paragraph used on South Frontenac's site
+    status_p = soup.find('p', class_='intro')
+    if status_p:
+        text = status_p.get_text(strip=True).lower()
+        if 'not a fire ban' in text or 'no ban' in text or 'lifted' in text:
+            return {"ban": "OFF"}
+        elif 'fire ban in place' in text or 'ban active' in text:
+            return {"ban": "ON"}
+            
+    # 2. Fallback: Search entire page text if the paragraph structure changes
+    page_text = soup.get_text(separator=' ', strip=True).lower()
+    if any(kw in page_text for kw in ['there is not a fire ban', 'no ban', 'ban was lifted', 'ban is off']):
         return {"ban": "OFF"}
-    elif 'fire ban in place' in text or ('level' in text and 'ban' in text and 'lifted' not in text):
+    elif any(kw in page_text for kw in ['fire ban in place', 'ban is active', 'ban is on']):
         return {"ban": "ON"}
         
-    return {"ban": f"UNKNOWN:{text[:80]}"}
+    # 3. Clear debug output
+    return {"ban": "UNKNOWN:STATUS_NOT_FOUND"}
 
 def poll_municipality(key, config):
     print(f"\n[{key}] Fetching {config['url']}...")
