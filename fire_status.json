@@ -1,12 +1,12 @@
 {
-  "fetched_at": "2026-06-02T20:31:12.396212+00:00",
+  "fetched_at": "2026-06-03T02:15:34.779537+00:00",
   "municipalities": {
     "north_frontenac": {
-      "error": "fetch_failed",
+      "ban": null,
       "source_url": "https://www.northfrontenac.com/en/our-community/burn-ban-status-and-fire-danger.aspx"
     },
     "central_frontenac": {
-      "error": "fetch_failed",
+      "ban": "OFF",
       "source_url": "https://www.centralfrontenac.com/en/living-here/burn-permits.aspx"
     },
     "south_frontenac": {
