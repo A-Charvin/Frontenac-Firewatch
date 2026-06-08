@@ -1,21 +1,21 @@
 {
-  "fetched_at": "2026-06-08T15:19:24.088638+00:00",
+  "fetched_at": "2026-06-08T18:01:42.486714+00:00",
   "municipalities": {
     "north_frontenac": {
-      "ban": null,
-      "source_url": "https://www.northfrontenac.com/en/our-community/burn-ban-status-and-fire-danger.aspx"
+      "ban": "OFF",
+      "source_url": "https://www.northfrontenac.com/our-community/burn-ban-status-and-fire-danger/"
     },
     "central_frontenac": {
       "ban": "OFF",
-      "source_url": "https://www.centralfrontenac.com/en/living-here/burn-permits.aspx"
+      "source_url": "https://www.centralfrontenac.com/living-here/burn-permits-and-status/"
     },
     "south_frontenac": {
       "ban": "OFF",
-      "source_url": "https://www.southfrontenac.net/living-in-south-frontenac/fire-and-emergency-services/fire-ban-status/"
+      "source_url": "https://www.southfrontenac.net/living-in-south-frontenac/fire-and-emergency-services/open-air-fire-rules-fire-ban-status/"
     },
     "frontenac_islands": {
       "ban": "OFF",
-      "source_url": "https://www.frontenacislands.ca/en/living-here/fire-and-emergency-services.aspx"
+      "source_url": "https://www.frontenacislands.ca/living-here/fire-and-emergency-services/"
     }
   }
 }
