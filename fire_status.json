@@ -1,8 +1,8 @@
 {
-  "fetched_at": "2026-07-06T09:46:49.274992+00:00",
+  "fetched_at": "2026-07-06T14:47:34.741838+00:00",
   "municipalities": {
     "north_frontenac": {
-      "error": "fetch_failed",
+      "ban": "OFF",
       "source_url": "https://www.northfrontenac.com/our-community/burn-ban-status-and-fire-danger/"
     },
     "central_frontenac": {
